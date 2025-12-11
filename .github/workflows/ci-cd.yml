@@ -1,0 +1,53 @@
+name: CI-CD Pipeline
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ '*' ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - run: dotnet restore
+      - run: dotnet tool restore
+      - run: dotnet format --check
+      - run: dotnet build --no-restore --configuration Release
+      - run: dotnet test --no-build --verbosity normal
+      - run: dotnet publish -c Release -o ./publish
+      - uses: actions/upload-artifact@v4
+        with:
+          name: publish
+          path: ./publish
+
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: publish
+          path: ./publish
+      - name: Azure WebApp Deploy (staging slot)
+        uses: azure/webapps-deploy@v1
+        with:
+          app-name: ${{ secrets.AZURE_APP_NAME }}
+          slot-name: staging
+          publish-profile: ${{ secrets.AZURE_PUBLISH_PROFILE }}
+          package: ./publish
+      - name: Swap slots
+        uses: azure/cli@v1
+        with:
+          inlineScript: |
+            az webapp deployment slot swap --name ${{ secrets.AZURE_APP_NAME }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --slot staging
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
