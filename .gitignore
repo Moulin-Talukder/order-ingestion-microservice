@@ -1,0 +1,26 @@
+# Visual Studio / .NET
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.userprefs
+*.db
+
+# Rider
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Local secrets / config
+appsettings.*.json
+secrets.json
+
+# Build outputs
+publish/
