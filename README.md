@@ -29,3 +29,12 @@ order-ingestion-microservice/
 ├── .github/workflows/ci-cd.yml
 └── README.md
 
+
+# run SQL scripts (using sqlcmd)
+sqlcmd -S localhost,1433 -U sa -P 'YourStrong!Passw0rd' -i ./sql/tables.sql
+sqlcmd -S localhost,1433 -U sa -P 'YourStrong!Passw0rd' -i ./sql/sp_InsertOrder.sql
+
+
+docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=YourStrong!Passw0rd" -p 1433:1433 -d mcr.microsoft.com/mssql/server:2022-latest
+
+
